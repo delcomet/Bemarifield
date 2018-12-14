@@ -1,0 +1,1 @@
+start cmd /k py -3 bem.py

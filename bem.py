@@ -1,12 +1,16 @@
-import gameover, menu, math, random, os
+import gameover, menu, math, random, os, json
 from colors import *
+from helpers import static_path
 
 event = None
 
+OPTIONS_FILE = "data/options.json"
+SCORE_FILE = "data/score.json"
 
 class Game:
+
     def __init__(self, width, height, filename="cruisin.jpg"):
-        self.background = pygame.image.load(filename)
+        self.background = pygame.image.load(static_path(filename))
         self.window_size = width, height
         self.window = pygame.display.set_mode((width, height))
         self.background = pygame.transform.scale(self.background, (width, height))
@@ -28,7 +32,7 @@ class Game:
         self.score = 0
 
         checked_settings2 = game.check_settings()
-        game.channel.set_volume(checked_settings2[1])
+        game.channel.set_volume(checked_settings2['sound'])
 
     def write(self, text, font_size, pos, color, dest, background=None, align='left', alpha=255):
         font = pygame.font.SysFont("Comic Sans MS", font_size)
@@ -45,33 +49,23 @@ class Game:
         if align is 'center':
             dest.blit(rendered_text, [x - width / 2, y - height / 2])
 
-    def update_settings(self, music, sound, name):
-        fw = open("options.txt", "w")
-        data = ["music_volume: " + str(music) + "\n",
-                "sound_volume: " + str(sound) + "\n"
-                "Name: " + str(name) + "\n"]
-        fw.writelines(data)
-        fw.close()
+    def update_settings(self, **kwargs):
+        settings = self.check_settings()
+        for setting, value in kwargs.items():
+            settings.update({setting: value})
+        with open(OPTIONS_FILE, 'w') as f:
+            f.write(json.dumps(settings))
 
     def check_settings(self):
-        if os.path.isfile("options.txt"):
-            if os.stat("options.txt").st_size == 0:
-                fw = open("options.txt", "w")
-                fw.writelines(["music_volume: 1\n", "sound_volume: 1\n", "Name: default\n"])
-                fw.close()
-        else:
-            fw = open("options.txt", "w")
-            fw.writelines(["music_volume: 1\n", "sound_volume: 1\n", "Name: default\n"])
-            fw.close()
+        if not os.path.isfile(OPTIONS_FILE):
+            return {
+            'music': 1,
+            'sound': 1,
+            'name': 'name',
+        }
 
-        fr = open("options.txt", "r")
-        settings = fr.readlines()
-        music = int(settings[0][14])
-        pygame.mixer.music.set_volume(music)
-        sound = int(settings[1][14])
-        name = settings[2][6:-1]
-        a = [music, sound, name]
-        return a
+        with open(OPTIONS_FILE) as f:
+            return json.loads(f.read())
 
     def update_score(self, player, score):
         fr = open("score.txt", "r")
@@ -122,7 +116,7 @@ class Game:
 class Player(pygame.sprite.Sprite):
     def __init__(self, filename=None):
         super(Player, self).__init__()
-        self.image = pygame.image.load(filename)
+        self.image = pygame.image.load(static_path(filename))
         self.rect = self.image.get_rect()
         self.radius = self.image.get_width() / 2
 
@@ -154,7 +148,7 @@ class Player(pygame.sprite.Sprite):
 class Enemy(pygame.sprite.Sprite):
     def __init__(self, start_x=0, start_y=0, speed=[], filename=None):
         super(Enemy, self).__init__()
-        self.image = pygame.image.load(filename)
+        self.image = pygame.image.load(static_path(filename))
         self.rect = self.image.get_rect()
         self.radius = self.image.get_width() / 2
 
@@ -203,7 +197,7 @@ if __name__ == "__main__":
     game.check_score()
     pygame.display.set_caption("Bemarifield 3.5")
     checked_settings = game.check_settings()
-    game.channel.set_volume(checked_settings[1])
+    game.channel.set_volume(checked_settings['sound'])
     player = Player("bmwcurs.png")
 
     skoda = Enemy(speed=[random.randint(20, 60) / 10, random.randint(20, 60) / 10], filename="skoda.png")
@@ -221,10 +215,10 @@ if __name__ == "__main__":
     game.score = 0
     running = True
 
-    start_sound = pygame.mixer.Sound("beep.ogg")
+    start_sound = pygame.mixer.Sound(static_path("beep.ogg"))
     start_sound.set_volume(0.1)
 
-    fail_sound = pygame.mixer.Sound("dong.ogg")
+    fail_sound = pygame.mixer.Sound(static_path("dong.ogg"))
     fail_sound.set_volume(1)
 
     while running is True:

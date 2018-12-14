@@ -1,11 +1,11 @@
 import button, bem
 from colors import *
-
+from helpers import static_path
 
 class Menu:
     def __init__(self, width=640, height=480):
-        self.game = bem.Game(width, height, "bggirl2.jpg")
-        pygame.mixer.music.load("sail.ogg")
+        self.game = bem.Game(width, height, static_path("bggirl2.jpg"))
+        pygame.mixer.music.load(static_path("sail.ogg"))
         pygame.mixer.music.play()
         
         self.clock = pygame.time.Clock()
@@ -13,7 +13,7 @@ class Menu:
 
         self.settings = self.game.check_settings()
         self.score_board = self.game.check_score()
-        self.name = self.settings[2]
+        self.name = self.settings['name']
         if len(self.name) == 0:
             self.name = "default"
 
@@ -29,9 +29,9 @@ class Menu:
         self.options_box = button.Button(white, 300, 400, 320 + 50, 240, "", 20, 150, True)
         self.score_box = button.Button(white, 300, 400, 320 + 50, 240, "", 20, 150, True)
 
-        pygame.mixer.music.set_volume(self.settings[0])
-        self.music_button.active(self.settings[0])
-        self.sound_button.active(self.settings[1])
+        pygame.mixer.music.set_volume(self.settings['music'])
+        self.music_button.active(self.settings['music'])
+        self.sound_button.active(self.settings['sound'])
 
         self.button_group = pygame.sprite.Group()
         self.static_button_group = pygame.sprite.Group()
@@ -56,7 +56,7 @@ class Menu:
                             self.name = "default"
                         self.name_button.inputtedtext = str(self.name)
                         self.name_button.active()
-                        self.game.update_settings(self.settings[0], self.settings[0], self.name)
+                        self.game.update_settings(name=self.name)
 
                         return
                 elif event.type == pygame.QUIT:
@@ -69,11 +69,15 @@ class Menu:
             pygame.display.update()
 
     def apply_settings(self):
-        pygame.mixer.music.set_volume(self.settings[0])
-        self.music_button.active(self.settings[0])
-        self.sound_button.active(self.settings[1])
+        pygame.mixer.music.set_volume(self.settings['music'])
+        self.music_button.active(self.settings['music'])
+        self.sound_button.active(self.settings['sound'])
 
-        self.game.update_settings(self.settings[0], self.settings[1], self.settings[2])
+        self.game.update_settings(
+            music=self.settings['music'], 
+            sound=self.settings['sound'], 
+            name=self.settings['name']
+        )
 
     def draw_everything(self):
         self.game.window.blit(self.game.background, (0, 0))
@@ -109,7 +113,7 @@ class Menu:
                         quit()
 
                     if self.newgame.rect.collidepoint(pygame.mouse.get_pos()):
-                        pygame.mixer.music.load("king_kunta.ogg")
+                        pygame.mixer.music.load(static_path("king_kunta.ogg"))
                         pygame.mixer.music.play()
                         return 
 
@@ -122,12 +126,12 @@ class Menu:
 
                     if self.static_button_group.has(self.music_button):
                         if self.music_button.rect.collidepoint(pygame.mouse.get_pos()):
-                            self.settings[0] = int(not self.settings[0])
+                            self.settings['music'] = int(not self.settings['music'])
                             self.apply_settings()
 
                     if self.static_button_group.has(self.sound_button):
                         if self.sound_button.rect.collidepoint(pygame.mouse.get_pos()):
-                            self.settings[1] = int(not self.settings[1])
+                            self.settings['sound'] = int(not self.settings['sound'])
                             self.apply_settings()
 
                     if self.options_button.rect.collidepoint(pygame.mouse.get_pos()):

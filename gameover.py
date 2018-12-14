@@ -14,7 +14,7 @@ class Gameover:
 
         self.checked_score_values = self.game.check_score()[1]
         self.checked_settings = self.game.check_settings()
-        self.game.update_score(self.checked_settings[2], score)
+        self.game.update_score(self.checked_settings['name'], score)
 
         clock = pygame.time.Clock()
         fps = 120
